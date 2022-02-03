@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package>
+
+  <name>ros_behavior_tree_learning</name>
+
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="dgerod@xyz-lab.org.es">Diego Escudero</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>ros_behavior_tree_learning_comms</build_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>ros_behavior_tree_learning_comms</run_depend>
+
+</package>
