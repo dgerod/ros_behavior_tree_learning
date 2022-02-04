@@ -4,21 +4,10 @@ from rik_utilities.connections.ports import BufferStorageLock, InputBufferPort, 
 from ros_behavior_tree_learning_comms.srv import GpInteractiveCtrl, GpInteractiveCtrlRequest, GpInteractiveCtrlResponse
 from ros_behavior_tree_learning_comms.msg import NextGeneration, PopBehaviorTree, PushFitness, State
 from ros_behavior_tree_learning.request import InteractiveStep
+from ros_behavior_tree_learning.port_helpers import wait_port
 
 
 BidirectionalPort = namedtuple('BidirectionalPort', 'request reply')
-
-
-def wait_port(port, wait_refresh_time=1.0, timeout=3600.0):
-
-    waiting = True
-
-    while waiting:
-        rospy.sleep(wait_refresh_time)
-        data = port.pop()
-        waiting = data is None
-
-    return data
 
 
 class Connector:

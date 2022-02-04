@@ -1,5 +1,4 @@
 from interface import implements
-import rospy
 from rik_utilities.activities import Task
 from behavior_tree_learning.core.sbt import behavior_tree
 from behavior_tree_learning.core.gp import GeneticParameters, GeneticSelectionMethods
@@ -7,43 +6,22 @@ from behavior_tree_learning.core.gp_sbt import BehaviorTreeLearner
 from ros_behavior_tree_learning_comms.msg import State
 from ros_behavior_tree_learning.gp_steps import GeneticProgrammingSteps
 from ros_behavior_tree_learning.request import InteractiveStep
-
-
-def wait_port(port, wait_refresh_time=1.0, timeout=3600.0):
-
-    waiting = True
-
-    while waiting:
-        rospy.sleep(wait_refresh_time)
-        data = port.pop()
-        waiting = data is None
-
-    return data
-
-
-def wait_port_until(port, expected, wait_refresh_time=1.0, timeout=3600.0):
-
-    waiting = True
-
-    while waiting:
-        rospy.sleep(wait_refresh_time)
-        received = port.pop()
-        waiting = (received != expected)
-
-    return True
+from ros_behavior_tree_learning.port_helpers import wait_port_until
 
 
 class ControllerTask(implements(Task)):
 
-    def __init__(self, settings_file_path, ports, publisher):
+    def __init__(self, settings_file_path, outputs_directory_path,
+                 ports, publisher):
 
-        behavior_tree.load_settings_from_file(settings_file_path)
+        self._settings_file = settings_file_path
+        self._outputs_directory = outputs_directory_path
+        self._parameters_path = ""
 
         self._step_port = ports.step
         self._bt_output_port = ports.bt_output
         self._fitness_input_port = ports.fitness_input
         self._state_publisher = publisher
-        self._parameters_path = ""
 
     def initialize(self):
         return True
@@ -92,6 +70,10 @@ class ControllerTask(implements(Task)):
         verbose = False
         return parameters, verbose
 
+    def _prepare_bt_settings(self):
+
+        behavior_tree.load_settings_from_file(self._settings_file)
+
     def _create_gp_steps(self, verbose):
 
         return GeneticProgrammingSteps(self._step_port,
@@ -102,13 +84,11 @@ class ControllerTask(implements(Task)):
     def _execute_learning(self):
 
         print("execute_learning")
+
+        self._prepare_bt_settings()
         parameters, verbose = self._load_parameters(self._parameters_path)
         steps = self._create_gp_steps(verbose)
 
-        scenario_name = 'tower'
-
-
-        #node_factory = BehaviorNodeFactory(get_behaviors(scenario_name))
-
+        parameters.log_name = "btl_gp"
         bt_learner = BehaviorTreeLearner.from_steps(steps)
-        return bt_learner.run(parameters, verbose=verbose)
+        return bt_learner.run(parameters, outputs_dir_path=self._outputs_directory, verbose=verbose)

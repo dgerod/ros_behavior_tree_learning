@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import rospy
-from behavior_tree_learning.srv import GpInteractiveCtrl, GpInteractiveCtrlRequest, GpInteractiveCtrlResponse
-from behavior_tree_learning.msg import NextGeneration, PopBehaviorTree, PushFitness
-from behavior_tree_learning.ros.request import InteractiveStep
+from ros_behavior_tree_learning_comms.srv import GpInteractiveCtrl, GpInteractiveCtrlRequest, GpInteractiveCtrlResponse
+from ros_behavior_tree_learning_comms.msg import NextGeneration, PopBehaviorTree, PushFitness
 
 
 SERVICE_NAME = '/btl_gp/do_step'
@@ -49,6 +49,8 @@ def _do_pop_behavior_tree():
         request.step = GpInteractiveCtrlRequest.STEP_POP_BEHAVIOR_TREE
         service = rospy.ServiceProxy(SERVICE_NAME, GpInteractiveCtrl)
         response = service(request)
+
+        print("bt: %s", response.pop_bt.bt)
         return response.success, response.pop_bt
 
     except rospy.ServiceException as e:
@@ -81,6 +83,8 @@ def _do_next_generation():
         request.step = GpInteractiveCtrlRequest.STEP_NEXT_GENERATION
         service = rospy.ServiceProxy(SERVICE_NAME, GpInteractiveCtrl)
         response = service(request)
+
+        print("another: %b", response.next_generation.continue_)
         return response.success, response.next_generation.continue_
 
     except rospy.ServiceException as e:
@@ -89,8 +93,12 @@ def _do_next_generation():
 
 def usage(argv):
 
-    print("%s [step] {bt fitness}" % argv[0])
-    print("step: start generation pop push next")
+    print("\n%s STEP [bt fitness]\n" % os.path.basename(argv[0]))
+    print("STEP: start (start execution of the GP algorithm)")
+    print("      execute (initialize the GP algorithm)")
+    print("      pop (retrieve BT)")
+    print("      push bt fitness (provide calculated fitness)")
+    print("      next (retrieve if there is another generation)")
 
 
 if __name__ == "__main__":

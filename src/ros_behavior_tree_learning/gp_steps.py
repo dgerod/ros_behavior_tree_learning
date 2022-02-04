@@ -1,32 +1,8 @@
 from interface import implements
-import rospy
 from behavior_tree_learning.core.gp import AlgorithmSteps
 from ros_behavior_tree_learning_comms.msg import State
 from ros_behavior_tree_learning.request import InteractiveStep
-
-
-def wait_port(port, wait_refresh_time=1.0, timeout=3600.0):
-
-    waiting = True
-
-    while waiting:
-        rospy.sleep(wait_refresh_time)
-        data = port.pop()
-        waiting = data is None
-
-    return data
-
-
-def wait_port_until(port, expected, wait_refresh_time=1.0, timeout=3600.0):
-
-    waiting = True
-
-    while waiting:
-        rospy.sleep(wait_refresh_time)
-        received = port.pop()
-        waiting = (received != expected)
-
-    return True
+from ros_behavior_tree_learning.port_helpers import wait_port, wait_port_until
 
 
 class GeneticProgrammingSteps(implements(AlgorithmSteps)):
