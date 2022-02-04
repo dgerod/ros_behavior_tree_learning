@@ -50,7 +50,7 @@ def _do_pop_behavior_tree():
         service = rospy.ServiceProxy(SERVICE_NAME, GpInteractiveCtrl)
         response = service(request)
 
-        print("bt: %s", response.pop_bt.bt)
+        print("bt: %s" % response.pop_bt.bt)
         return response.success, response.pop_bt
 
     except rospy.ServiceException as e:
@@ -84,7 +84,7 @@ def _do_next_generation():
         service = rospy.ServiceProxy(SERVICE_NAME, GpInteractiveCtrl)
         response = service(request)
 
-        print("another: %b", response.next_generation.continue_)
+        print("another: %b" % response.next_generation.continue_)
         return response.success, response.next_generation.continue_
 
     except rospy.ServiceException as e:
