@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 
-import os
 import sys
 import rospy
-
 from ros_behavior_tree_learning.ros_node import start_node
-
-
-_this_file_path = os.path.abspath(__file__)
-_CURRENT__DIRECTORY = os.path.dirname(_this_file_path)
 
 
 def usage(argv):
@@ -25,9 +19,7 @@ def main():
     else:
         usage(sys.argv)
     try:
-        start_node("btl_gp",
-                   os.path.join(_CURRENT__DIRECTORY, "bt_settings.yaml"),
-                   _CURRENT__DIRECTORY)
+        start_node(name, settings_file, outputs_dir)
     
     except rospy.ROSInterruptException:
         pass
