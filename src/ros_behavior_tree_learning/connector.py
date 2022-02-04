@@ -1,5 +1,6 @@
 from collections import namedtuple
 import rospy
+from rik_utilities.connections.ports import DataStorageLock
 from rik_utilities.connections.ports import BufferStorageLock, InputBufferPort, OutputBufferPort
 from ros_behavior_tree_learning_comms.srv import GpInteractiveCtrl, GpInteractiveCtrlRequest, GpInteractiveCtrlResponse
 from ros_behavior_tree_learning_comms.msg import NextGeneration, PopBehaviorTree, PushFitness, State
@@ -10,6 +11,26 @@ from ros_behavior_tree_learning.port_helpers import wait_port
 BidirectionalPort = namedtuple('BidirectionalPort', 'request reply')
 
 
+class StatePublisher:
+
+    class States:
+
+        NOT_STARTED = 1
+        RUNNING = 2
+        WAIT_EXECUTE_GENERATION = 3
+        WAIT_POP_BT = 4
+        WAIT_PUSH_FITNESS = 5
+        WAIT_ANOTHER_GENERATION = 6
+
+    def __init__(self, publisher, converter):
+        self._converter = converter
+        self._publisher = publisher
+
+    def send(self, state):
+        new_state = self._converter(state)
+        self._publisher.publish(new_state)
+
+
 class Connector:
 
     PortConnection = namedtuple('PortConnection', 'input output')
@@ -18,12 +39,14 @@ class Connector:
     def __init__(self, name: str):
 
         self._ports = self._create_ports()
-        self._publisher = self._create_ports()
 
         service_name = name + "/do_step"
         self._interactive_service = rospy.Service(service_name, GpInteractiveCtrl, self._interactive_service)
         publisher_name = name + "/state"
-        self._state_publisher = rospy.Publisher(publisher_name, State, queue_size=10)
+
+        self._state_storage = DataStorageLock()
+        self._state_publisher = StatePublisher(rospy.Publisher(publisher_name, State, queue_size=10),
+                                               self._update_state)
 
     def ports(self):
         return Connector.ExportedPorts(BidirectionalPort(self._ports["step_request"].input,
@@ -49,6 +72,26 @@ class Connector:
 
         return {'step_request': step_request_connection, 'step_reply': step_reply_connection,
                 'bt': bt_connection, 'fitness': fitness_connection}
+
+    def _update_state(self, state):
+
+        if state == StatePublisher.States.NOT_STARTED:
+            new_state = State.IDLE
+        elif state == StatePublisher.States.RUNNING:
+            new_state = State.RUNNING
+        elif state == StatePublisher.States.WAIT_EXECUTE_GENERATION:
+            new_state = State.CHECKING_NEXT_GENERATION
+        elif state == StatePublisher.States.WAIT_POP_BT:
+            new_state = State.CALCULATING_FITNESS
+        elif state == StatePublisher.States.WAIT_PUSH_FITNESS:
+            new_state = State.CALCULATING_FITNESS
+        elif state == StatePublisher.States.WAIT_ANOTHER_GENERATION:
+            new_state = State.CHECKING_NEXT_GENERATION
+        else:
+            raise ValueError("Unknown state")
+
+        self._state_storage.write(state)
+        return new_state
 
     def _interactive_service(self, request):
 
@@ -77,6 +120,9 @@ class Connector:
 
         print("Connector::_do_start_execution")
 
+        if self._state_storage.read() != StatePublisher.States.NOT_STARTED:
+            return False
+
         self._ports["step_request"].output.push(InteractiveStep.STEP_START_EXECUTION)
         _ = wait_port(self._ports["step_reply"].input)
 
@@ -86,6 +132,9 @@ class Connector:
 
         print("Connector::_do_execute_generation")
 
+        if self._state_storage.read() != StatePublisher.States.WAIT_EXECUTE_GENERATION:
+            return False
+
         self._ports["step_request"].output.push(InteractiveStep.STEP_EXECUTE_GENERATION)
         _ = wait_port(self._ports["step_reply"].input)
 
@@ -94,6 +143,9 @@ class Connector:
     def _do_pop_bt(self):
 
         print("Connector::_do_pop_bt")
+
+        if self._state_storage.read() != StatePublisher.States.WAIT_POP_BT:
+            return False, ""
 
         self._ports["step_request"].output.push(InteractiveStep.STEP_POP_BEHAVIOR_TREE)
         bt = wait_port(self._ports["bt"].input)
@@ -105,6 +157,10 @@ class Connector:
     def _do_push_fitness(self, bt, fitness):
 
         print("Connector::_do_push_fitness")
+
+        if self._state_storage.read() != StatePublisher.States.WAIT_PUSH_FITNESS:
+            return False
+
         print("bt: %s" % bt)
         print("fitness: %s" % fitness)
 
@@ -117,6 +173,9 @@ class Connector:
     def _do_next_generation(self):
 
         print("Connector::_do_next_generation")
+
+        if self._state_storage.read() != StatePublisher.States.WAIT_ANOTHER_GENERATION:
+            return False, False
 
         self._ports["step_request"].output.push(InteractiveStep.STEP_NEXT_GENERATION)
         another_generation = wait_port(self._ports["step_reply"].input)

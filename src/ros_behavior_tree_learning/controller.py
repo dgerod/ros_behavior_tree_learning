@@ -3,7 +3,7 @@ from rik_utilities.activities import Task
 from behavior_tree_learning.core.sbt import behavior_tree
 from behavior_tree_learning.core.gp import GeneticParameters, GeneticSelectionMethods
 from behavior_tree_learning.core.gp_sbt import BehaviorTreeLearner
-from ros_behavior_tree_learning_comms.msg import State
+from ros_behavior_tree_learning.connector import StatePublisher
 from ros_behavior_tree_learning.gp_steps import GeneticProgrammingSteps
 from ros_behavior_tree_learning.request import InteractiveStep
 from ros_behavior_tree_learning.port_helpers import wait_port_until
@@ -32,10 +32,14 @@ class ControllerTask(implements(Task)):
     def step(self):
 
         print("step")
-        self._state_publisher.publish(State(State.IDLE))
+
+        self._state_publisher.send(StatePublisher.States.NOT_STARTED)
+
         if wait_port_until(self._step_port.request, InteractiveStep.STEP_START_EXECUTION):
+
+            self._state_publisher.send(StatePublisher.States.RUNNING)
             self._step_port.reply.push(True)
-            success = self._execute_learning()
+            self._execute_learning()
 
         # SEND_WORK_COMPLETED
 
