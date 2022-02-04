@@ -93,15 +93,15 @@ def _do_next_generation():
 
 def usage(argv):
 
-    print("\n%s STEP [bt fitness]\n" % os.path.basename(argv[0]))
-    print("STEP: start (start execution of the GP algorithm)")
+    print("\n%s step [bt fitness]\n" % os.path.basename(argv[0]))
+    print("step: start (start execution of the GP algorithm)")
     print("      execute (initialize the GP algorithm)")
     print("      pop (retrieve BT)")
     print("      push bt fitness (provide calculated fitness)")
     print("      next (retrieve if there is another generation)")
 
 
-if __name__ == "__main__":
+def main():
 
     if len(sys.argv) == 2:
         step = str(sys.argv[1])
@@ -125,3 +125,7 @@ if __name__ == "__main__":
         success, continue_ = _do_next_generation()
     else:
         raise ValueError("Unknown step")
+
+
+if __name__ == "__main__":
+    main()
