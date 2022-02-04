@@ -1,3 +1,3 @@
 #!/bin/bash
 
-btl_node.py btl_gp ./bt_settings.yaml ./logs
+btl_node.py btl_gp ../example/duplo_settings.yaml ./logs
