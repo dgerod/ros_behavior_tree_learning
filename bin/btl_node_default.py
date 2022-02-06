@@ -14,7 +14,7 @@ def main():
 
     try:
         start_node("btl_gp",
-                   os.path.join(_EXAMPLES_DIRECTORY, "bt_settings.yaml"),
+                   os.path.join(_EXAMPLES_DIRECTORY, "duplo_settings.yaml"),
                    os.path.join(_EXAMPLES_DIRECTORY, "results"))
     
     except rospy.ROSInterruptException:

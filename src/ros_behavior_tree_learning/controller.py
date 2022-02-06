@@ -1,5 +1,5 @@
 from interface import implements
-from rik_utilities.activities import Task
+from tasks_toolkit.activities import Task
 from behavior_tree_learning.core.sbt import behavior_tree
 from behavior_tree_learning.core.gp import GeneticParameters, GeneticSelectionMethods
 from behavior_tree_learning.core.gp_sbt import BehaviorTreeLearner
@@ -31,12 +31,9 @@ class ControllerTask(implements(Task)):
 
     def step(self):
 
-        print("step")
-
         self._state_publisher.send(StatePublisher.States.NOT_STARTED)
 
         if wait_port_until(self._step_port.request, InteractiveStep.STEP_START_EXECUTION):
-
             self._state_publisher.send(StatePublisher.States.RUNNING)
             self._step_port.reply.push(True)
             self._execute_learning()
@@ -48,8 +45,8 @@ class ControllerTask(implements(Task)):
 
         parameters = GeneticParameters()
 
-        parameters.n_population = 16
-        parameters.n_generations = 200
+        parameters.n_population = 4  # 16
+        parameters.n_generations = 2  # 200
         parameters.ind_start_length = 8
         parameters.f_crossover = 0.5
         parameters.n_offspring_crossover = 2

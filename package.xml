@@ -14,13 +14,13 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>ros_behavior_tree_learning_comms</build_depend>
   <build_depend>behavior_tree_learning</build_depend>
-  <build_depend>rik_utilities</build_depend>
+  <build_depend>tasks_toolkit</build_depend>
 
   <run_depend>rospy</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>ros_behavior_tree_learning_comms</run_depend>
   <run_depend>behavior_tree_learning</run_depend>
-  <run_depend>rik_utilities</run_depend>
+  <run_depend>tasks_toolkit</run_depend>
 
 </package>

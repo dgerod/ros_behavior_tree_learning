@@ -12,7 +12,7 @@ catkin_package(
   CATKIN_DEPENDS rospy
                  message_runtime
                  std_msgs
-                 rik_utilities
+                 tasks_toolkit
                  behavior_tree_learning
                  ros_behavior_tree_learning_comms
 )

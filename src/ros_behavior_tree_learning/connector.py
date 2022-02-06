@@ -1,7 +1,7 @@
 from collections import namedtuple
 import rospy
-from rik_utilities.connections.ports import DataStorageLock
-from rik_utilities.connections.ports import BufferStorageLock, InputBufferPort, OutputBufferPort
+from tasks_toolkit.connections.ports import DataStorageLock
+from tasks_toolkit.connections.ports import BufferStorageLock, InputBufferPort, OutputBufferPort
 from ros_behavior_tree_learning_comms.srv import GpInteractiveCtrl, GpInteractiveCtrlRequest, GpInteractiveCtrlResponse
 from ros_behavior_tree_learning_comms.msg import NextGeneration, PopBehaviorTree, PushFitness, State
 from ros_behavior_tree_learning.request import InteractiveStep

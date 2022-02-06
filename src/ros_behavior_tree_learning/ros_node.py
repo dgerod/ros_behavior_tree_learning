@@ -1,5 +1,5 @@
 import rospy
-from rik_utilities.activities import ActivityFactory
+from tasks_toolkit.activities import ActivityFactory
 from ros_behavior_tree_learning.connector import Connector
 from ros_behavior_tree_learning.controller import ControllerTask
 
