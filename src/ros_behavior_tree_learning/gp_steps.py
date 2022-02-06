@@ -47,7 +47,7 @@ class GeneticProgrammingSteps(implements(AlgorithmSteps)):
 
         self._state_publisher.send(StatePublisher.States.WAIT_ANOTHER_GENERATION)
         wait_port_until(self._step_ports.request, InteractiveStep.STEP_NEXT_GENERATION, self._WAIT_REFRESH_TIME)
-        another_generation = True if generation < last_generation else False
+        another_generation = True if generation <= last_generation else False
 
         self._state_publisher.send(StatePublisher.States.RUNNING)
         self._step_ports.reply.push(another_generation)
