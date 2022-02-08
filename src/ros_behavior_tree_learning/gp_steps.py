@@ -60,7 +60,7 @@ class GeneticProgrammingSteps(implements(AlgorithmSteps)):
         self._state_publisher.send(StatePublisher.States.WAIT_POP_BT)
         wait_port_until(self._step_ports.request, InteractiveStep.STEP_POP_BEHAVIOR_TREE, self._WAIT_REFRESH_TIME)
 
-        text = "# ".join(individual)
+        text = "; ".join(individual)
 
         print("bt (list): ", individual)
         print("bt (str): ", text)

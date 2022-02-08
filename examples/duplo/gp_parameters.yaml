@@ -1,0 +1,25 @@
+parameters:
+  n_population: 4
+  n_generations: 2
+  ind_start_length: 8
+  f_crossover: 0.5
+  n_offspring_crossover: 2
+  replace_crossover: False
+  f_mutation: 0.5
+  n_offspring_mutation: 2
+  parent_selection: RANK
+  survivor_selection: RANK
+  f_elites: 0.1
+  f_parents: 0.1
+  mutate_co_offspring: False
+  mutate_co_parents: True
+  mutation_p_add: 0.4
+  mutation_p_delete: 0.3
+  allow_identical: False
+
+plot:
+  fitness: False
+  best_individual: False
+  last_generation: False
+
+verbose: False
