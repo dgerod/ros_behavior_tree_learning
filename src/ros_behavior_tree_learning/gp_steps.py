@@ -41,13 +41,14 @@ class GeneticProgrammingSteps(implements(AlgorithmSteps)):
     def plot_individual(self, path, plot_name, individual):
         print("plot_individual")
 
-    def more_generations(self, generation, last_generation, error):
+    def more_generations(self, generation, last_generation, fitness_achieved):
 
-        print("more_generations: %d/%d" % (generation, last_generation))
+        print("more_generations: %d/%d, %s" % (generation, last_generation, fitness_achieved))
 
         self._state_publisher.send(StatePublisher.States.WAIT_ANOTHER_GENERATION)
         wait_port_until(self._step_ports.request, InteractiveStep.STEP_NEXT_GENERATION, self._WAIT_REFRESH_TIME)
-        another_generation = True if generation <= last_generation else False
+
+        another_generation = True if generation <= last_generation and not fitness_achieved else False
 
         self._state_publisher.send(StatePublisher.States.RUNNING)
         self._step_ports.reply.push(another_generation)
