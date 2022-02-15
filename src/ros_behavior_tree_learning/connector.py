@@ -95,8 +95,7 @@ class Connector:
 
     def _interactive_service(self, request):
 
-        print("Connector::_interactive_service: %s" % request)
-        print("step: %d" % request.step)
+        print("Connector::_interactive_service: %s" % request.step)
 
         if request.step == GpInteractiveCtrlRequest.STEP_START_EXECUTION:
             succeed = self._do_start_execution()
@@ -118,14 +117,16 @@ class Connector:
 
     def _do_start_execution(self):
 
-        print("Connector::_do_start_execution")
+        print("WaitConnector::_do_start_execution")
 
         if self._state_storage.read() != StatePublisher.States.NOT_STARTED:
+            print("ERROR: Not in expected state")
             return False
 
         self._ports["step_request"].output.push(InteractiveStep.STEP_START_EXECUTION)
         _ = wait_port(self._ports["step_reply"].input)
 
+        print("done")
         return True
 
     def _do_execute_generation(self):
@@ -133,11 +134,13 @@ class Connector:
         print("Connector::_do_execute_generation")
 
         if self._state_storage.read() != StatePublisher.States.WAIT_EXECUTE_GENERATION:
+            print("ERROR: Not in expected state")
             return False
 
         self._ports["step_request"].output.push(InteractiveStep.STEP_EXECUTE_GENERATION)
         _ = wait_port(self._ports["step_reply"].input)
 
+        print("done")
         return True
 
     def _do_pop_bt(self):
@@ -145,6 +148,7 @@ class Connector:
         print("Connector::_do_pop_bt")
 
         if self._state_storage.read() != StatePublisher.States.WAIT_POP_BT:
+            print("ERROR: Not in expected state")
             return False, ""
 
         self._ports["step_request"].output.push(InteractiveStep.STEP_POP_BEHAVIOR_TREE)
@@ -159,6 +163,7 @@ class Connector:
         print("Connector::_do_push_fitness")
 
         if self._state_storage.read() != StatePublisher.States.WAIT_PUSH_FITNESS:
+            print("ERROR: Not in expected state")
             return False
 
         print("bt: %s" % bt)
@@ -168,6 +173,7 @@ class Connector:
         self._ports["fitness"].output.push(fitness)
         _ = wait_port(self._ports["step_reply"].input)
 
+        print("done")
         return True
 
     def _do_next_generation(self):
@@ -175,9 +181,11 @@ class Connector:
         print("Connector::_do_next_generation")
 
         if self._state_storage.read() != StatePublisher.States.WAIT_ANOTHER_GENERATION:
+            print("ERROR: Not in expected state")
             return False, False
 
         self._ports["step_request"].output.push(InteractiveStep.STEP_NEXT_GENERATION)
         another_generation = wait_port(self._ports["step_reply"].input)
 
+        print("more generations: %s" % another_generation)
         return True, another_generation
