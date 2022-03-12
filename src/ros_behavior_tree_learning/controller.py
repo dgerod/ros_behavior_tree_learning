@@ -1,5 +1,8 @@
+import os
+import logging
 from interface import implements
 import yaml
+
 from tasks_toolkit.activities import Task
 from behavior_tree_learning.core.sbt import behavior_tree
 from behavior_tree_learning.core.gp import GeneticParameters, GeneticSelectionMethods
@@ -8,6 +11,22 @@ from ros_behavior_tree_learning.connector import StatePublisher
 from ros_behavior_tree_learning.gp_steps import GeneticProgrammingSteps
 from ros_behavior_tree_learning.request import InteractiveStep
 from ros_behavior_tree_learning.port_helpers import wait_port_until
+
+
+def _configure_logger(level, directory_path, name):
+
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    try:
+        file_path = os.path.join(directory_path, name + '.log')
+        os.mkdir(directory_path)
+    except:
+        pass
+
+    logging.basicConfig(filename=file_path,
+                        format='%(filename)s: %(message)s')
+    logging.getLogger("gp").setLevel(level)
 
 
 class ControllerTask(implements(Task)):
@@ -73,6 +92,9 @@ class ControllerTask(implements(Task)):
                     parameters.n_population = data["parameters"]["n_population"]
                 if "n_generations" in data["parameters"]:
                     parameters.n_generations = data["parameters"]["n_generations"]
+                if "fitness_threshold" in data["parameters"]:
+                    parameters.fitness_threshold = data["parameters"]["fitness_threshold"]
+
                 if "ind_start_length" in data["parameters"]:
                     parameters.ind_start_length = data["parameters"]["ind_start_length"]
                 if "f_crossover" in data["parameters"]:
@@ -132,7 +154,8 @@ class ControllerTask(implements(Task)):
         return GeneticProgrammingSteps(self._step_port,
                                        self._bt_output_port,
                                        self._fitness_input_port,
-                                       self._state_publisher)
+                                       self._state_publisher,
+                                       verbose=verbose)
 
     def _execute_learning(self):
 
@@ -141,6 +164,9 @@ class ControllerTask(implements(Task)):
         self._prepare_bt_settings()
         parameters, verbose = self._load_parameters(self._gp_parameters_path)
         steps = self._create_gp_steps(verbose)
+
+        if verbose:
+            _configure_logger(logging.DEBUG, self._outputs_directory, "btl")
 
         parameters.log_name = "btl_gp"
         bt_learner = BehaviorTreeLearner.from_steps(steps)
