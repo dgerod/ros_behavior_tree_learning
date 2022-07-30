@@ -36,6 +36,16 @@ class GeneticProgrammingSteps(implements(AlgorithmSteps)):
         print("calculate_fitness")
         self._send_individual(individual)
         fitness = self._wait_fitness_result()
+
+        #num_nodes = len(individual)
+
+        #COMPLEXITY_CORRECTION = 0.01
+        #bt_complexity = COMPLEXITY_CORRECTION/num_nodes
+        #new_fitness = (fitness + bt_complexity)/(1 + COMPLEXITY_CORRECTION)
+
+        #print("fitness: %s, num nones: %s, corrected fitness: %s" %(fitness, num_nodes, new_fitness))
+        #return new_fitness
+
         return fitness
 
     def plot_individual(self, path, plot_name, individual):

@@ -4,9 +4,15 @@ from interface import implements
 import yaml
 
 from tasks_toolkit.activities import Task
-from behavior_tree_learning.core.sbt import behavior_tree
-from behavior_tree_learning.core.gp import GeneticParameters, GeneticSelectionMethods
-from behavior_tree_learning.core.gp_sbt import BehaviorTreeLearner
+from behavior_tree_learning.sbt_learning import GeneticParameters, GeneticSelectionMethods
+
+from behavior_tree_learning.cbt_learning import configure_cbt_checker
+from behavior_tree_learning.cbt_learning import BehaviorTreeLearner as CbtTreeLearner
+from behavior_tree_learning.cbt_learning import BehaviorNodeFactory as CbtNodeFactory
+
+from behavior_tree_learning.sbt_learning import BehaviorTreeLearner as SbtTreeLearner
+from behavior_tree_learning.sbt_learning import BehaviorNodeFactory as SbtNodeFactory
+
 from ros_behavior_tree_learning.connector import StatePublisher
 from ros_behavior_tree_learning.gp_steps import GeneticProgrammingSteps
 from ros_behavior_tree_learning.request import InteractiveStep
@@ -18,8 +24,9 @@ def _configure_logger(level, directory_path, name):
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
 
+    file_path = os.path.join(directory_path, name + '.log')
+
     try:
-        file_path = os.path.join(directory_path, name + '.log')
         os.mkdir(directory_path)
     except:
         pass
@@ -31,9 +38,17 @@ def _configure_logger(level, directory_path, name):
 
 class ControllerTask(implements(Task)):
 
-    def __init__(self, bt_settings_file_path, gp_parameters_file_path, outputs_directory_path,
+    def __init__(self, bt_type, bt_settings_file_path, gp_parameters_file_path, outputs_directory_path,
                  ports, publisher):
 
+        if bt_type == "cbt":
+
+            configure_cbt_checker({"app_path": "/home/ubuntu/ros_ws/src/cbt_checker/bin",
+                                   "dependencies_path": "/home/ubuntu/ros_ws/src/cbt_checker/dependencies/limboole/limboole",
+                                   "temporary_directory": "/home/ubuntu/ros_ws/src/behavior_tree_learning/tmp",
+                                   "logger": "NONE"})
+
+        self._bt_type = bt_type
         self._bt_settings_path = bt_settings_file_path
         self._gp_parameters_path = gp_parameters_file_path
         self._outputs_directory = outputs_directory_path
@@ -147,7 +162,17 @@ class ControllerTask(implements(Task)):
 
     def _prepare_bt_settings(self):
 
-        behavior_tree.load_settings_from_file(self._bt_settings_path)
+        def make_nodes(text, world, verbose=False):
+            return None
+
+        conditions = []
+
+        if self._bt_type == "sbt":
+            SbtNodeFactory().from_bt_settings(self._bt_settings_path, make_nodes)
+        else:
+            _, conditions = CbtNodeFactory.from_settings(self._bt_settings_path, make_nodes)
+
+        return conditions
 
     def _create_gp_steps(self, verbose):
 
@@ -161,7 +186,7 @@ class ControllerTask(implements(Task)):
 
         print("execute_learning")
 
-        self._prepare_bt_settings()
+        conditions = self._prepare_bt_settings()
         parameters, verbose = self._load_parameters(self._gp_parameters_path)
         steps = self._create_gp_steps(verbose)
 
@@ -169,5 +194,10 @@ class ControllerTask(implements(Task)):
             _configure_logger(logging.DEBUG, self._outputs_directory, "btl")
 
         parameters.log_name = "btl_gp"
-        bt_learner = BehaviorTreeLearner.from_steps(steps)
+
+        if self._bt_type == "sbt":
+            bt_learner = SbtTreeLearner.from_steps(steps)
+        else:
+            bt_learner = CbtTreeLearner.from_steps(conditions, steps)
+
         return bt_learner.run(parameters, outputs_dir_path=self._outputs_directory, verbose=verbose)

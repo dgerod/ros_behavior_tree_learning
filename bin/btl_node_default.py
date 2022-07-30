@@ -14,6 +14,7 @@ def main():
 
     try:
         start_node("btl_gp",
+                   "sbt",
                    os.path.join(_EXAMPLES_DIRECTORY, "duplo", "bt_settings.yaml"),
                    os.path.join(_EXAMPLES_DIRECTORY, "duplo", "gp_parameters.yaml"),
                    os.path.join(_EXAMPLES_DIRECTORY, "results"))

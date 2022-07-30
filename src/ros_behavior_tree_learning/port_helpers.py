@@ -1,8 +1,9 @@
 import rospy
 
 
-def wait_port(input_port, wait_refresh_time=1.0, timeout=3600.0):
+def wait_port(input_port, wait_refresh_time=1.0):
 
+    data = None
     waiting = True
 
     while waiting:
@@ -13,7 +14,7 @@ def wait_port(input_port, wait_refresh_time=1.0, timeout=3600.0):
     return data
 
 
-def wait_port_until(input_port, expected, wait_refresh_time=1.0, timeout=3600.0):
+def wait_port_until(input_port, expected, wait_refresh_time=1.0):
 
     waiting = True
 

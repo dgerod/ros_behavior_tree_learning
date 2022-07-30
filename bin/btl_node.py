@@ -13,16 +13,18 @@ def usage(argv):
 
 def main():
 
-    if len(sys.argv) == 4:
+    if len(sys.argv) == 5:
         name = str(sys.argv[1])
-        bt_settings_file = str(sys.argv[2])
-        gp_parameters_file = str(sys.argv[3])
-        outputs_dir = str(sys.argv[4])
+        bt_type = str(sys.argv[2])
+        bt_settings_file = str(sys.argv[3])
+        gp_parameters_file = str(sys.argv[4])
+        outputs_dir = str(sys.argv[5])
     else:
         usage(sys.argv)
+        sys.exit(-1)
+
     try:
-        start_node(name, bt_settings_file, gp_parameters_file, outputs_dir)
-    
+        start_node(name, bt_type, bt_settings_file, gp_parameters_file, outputs_dir)
     except rospy.ROSInterruptException:
         pass
 
