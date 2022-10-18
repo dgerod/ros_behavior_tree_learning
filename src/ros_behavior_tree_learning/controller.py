@@ -41,7 +41,13 @@ class ControllerTask(implements(Task)):
     def __init__(self, bt_type, bt_settings_file_path, gp_parameters_file_path, outputs_directory_path,
                  ports, publisher):
 
-        if bt_type == "cbt":
+        if bt_type == "sbt":
+            self._bt_settings_path = bt_settings_file_path
+            self._bt_initial_state_path = ""
+
+        else:
+            self._bt_settings_path = bt_settings_file_path + "_settings.yaml"
+            self._bt_initial_state_path = bt_settings_file_path + "_initial_state.yaml"
 
             configure_cbt_checker({"app_path": "/home/ubuntu/ros_ws/src/cbt_checker/bin",
                                    "dependencies_path": "/home/ubuntu/ros_ws/src/cbt_checker/dependencies/limboole/limboole",
@@ -49,7 +55,6 @@ class ControllerTask(implements(Task)):
                                    "logger": "NONE"})
 
         self._bt_type = bt_type
-        self._bt_settings_path = bt_settings_file_path
         self._gp_parameters_path = gp_parameters_file_path
         self._outputs_directory = outputs_directory_path
 
@@ -166,13 +171,18 @@ class ControllerTask(implements(Task)):
             return None
 
         conditions = []
+        initial_state = ""
 
         if self._bt_type == "sbt":
             SbtNodeFactory().from_bt_settings(self._bt_settings_path, make_nodes)
         else:
             _, conditions = CbtNodeFactory.from_settings(self._bt_settings_path, make_nodes)
 
-        return conditions
+            with open(self._bt_initial_state_path) as f:
+                bt_settings = yaml.load(f, Loader=yaml.FullLoader)
+                initial_state = bt_settings['initial_state']
+
+        return conditions, initial_state
 
     def _create_gp_steps(self, verbose):
 
@@ -182,22 +192,26 @@ class ControllerTask(implements(Task)):
                                        self._state_publisher,
                                        verbose=verbose)
 
+    def _create_learner(self, conditions, initial_state, steps):
+
+        if self._bt_type == "sbt":
+            bt_learner = SbtTreeLearner.from_steps(steps)
+        else:
+            bt_learner = CbtTreeLearner.from_steps(conditions, initial_state, steps)
+
+        return bt_learner
+
     def _execute_learning(self):
 
         print("execute_learning")
 
-        conditions = self._prepare_bt_settings()
+        conditions, initial_state = self._prepare_bt_settings()
         parameters, verbose = self._load_parameters(self._gp_parameters_path)
         steps = self._create_gp_steps(verbose)
 
         if verbose:
             _configure_logger(logging.DEBUG, self._outputs_directory, "btl")
-
         parameters.log_name = "btl_gp"
 
-        if self._bt_type == "sbt":
-            bt_learner = SbtTreeLearner.from_steps(steps)
-        else:
-            bt_learner = CbtTreeLearner.from_steps(conditions, steps)
-
+        bt_learner = self._create_learner(conditions, initial_state, steps)
         return bt_learner.run(parameters, outputs_dir_path=self._outputs_directory, verbose=verbose)
