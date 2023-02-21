@@ -4,7 +4,7 @@ from interface import implements
 import yaml
 
 from tasks_toolkit.activities import Task
-from behavior_tree_learning.sbt_learning import GeneticParameters, GeneticSelectionMethods
+from behavior_tree_learning.gp import GeneticParameters, GeneticSelectionMethods, TraceConfiguration
 
 from behavior_tree_learning.cbt_learning import configure_cbt_checker
 from behavior_tree_learning.cbt_learning import BehaviorTreeLearner as CbtTreeLearner
@@ -99,8 +99,10 @@ class ControllerTask(implements(Task)):
     def _load_parameters(file_path):
 
         parameters = GeneticParameters()
-        parameters.log_name = "btl-gp"
+        parameters.log_name = "btl_gp"
         verbose = False
+
+        trace_configuration = TraceConfiguration()
 
         with open(file_path) as f:
 
@@ -154,16 +156,16 @@ class ControllerTask(implements(Task)):
             if "plot" in data:
 
                 if "fitness" in data["plot"]:
-                    parameters.plot_fitness = data["plot"]["fitness"]
+                    trace_configuration.plot_fitness = data["plot"]["fitness"]
                 if "best_individual" in data["plot"]:
-                    parameters.plot_best_individual = data["plot"]["best_individual"]
+                    trace_configuration.plot_best_individual = data["plot"]["best_individual"]
                 if "last_generation" in data["plot"]:
-                    parameters.plot_last_generation = data["plot"]["last_generation"]
+                    trace_configuration.plot_last_generation = data["plot"]["last_generation"]
 
             if "verbose" in data:
                 verbose = data["verbose"]
 
-        return parameters, verbose
+        return parameters, trace_configuration, verbose
 
     def _prepare_bt_settings(self):
 
@@ -206,12 +208,21 @@ class ControllerTask(implements(Task)):
         print("execute_learning")
 
         conditions, initial_state = self._prepare_bt_settings()
-        parameters, verbose = self._load_parameters(self._gp_parameters_path)
+        parameters, trace_configuration, verbose = self._load_parameters(self._gp_parameters_path)
         steps = self._create_gp_steps(verbose)
 
         if verbose:
             _configure_logger(logging.DEBUG, self._outputs_directory, "btl")
-        parameters.log_name = "btl_gp"
+
+        print("BT Conditions")
+        print(conditions)
+        print("BT Initial State")
+        print(initial_state)
+        print("GP Parameters")
+        print(parameters)
+        print("GP Trace")
+        print(trace_configuration)
 
         bt_learner = self._create_learner(conditions, initial_state, steps)
-        return bt_learner.run(parameters, outputs_dir_path=self._outputs_directory, verbose=verbose)
+        return bt_learner.run(parameters, outputs_dir_path=self._outputs_directory,
+                              trace_conf=trace_configuration, verbose=verbose)
