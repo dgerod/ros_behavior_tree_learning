@@ -11,17 +11,18 @@ from ros_behavior_tree_learning.port_helpers import wait_port
 BidirectionalPort = namedtuple('BidirectionalPort', 'request reply')
 
 
-def wait_state_until(state, expected, wait_refresh_time=1.0, timeout=3600.0):
+def wait_state_until(storage, expected, wait_refresh_time=1, timeout=3600.0):
 
     waiting = True
     max_time = rospy.get_time() + timeout
 
     while waiting:
-
         if not (rospy.get_time() < max_time):
             return False
 
         rospy.sleep(wait_refresh_time)
+
+        state = storage.read()
         waiting = state not in expected
         print("Expected: %s, State: %s, Waiting: %s" % (expected, state, waiting))
 
@@ -136,7 +137,7 @@ class Connector:
 
         print("WaitConnector::_do_start_execution")
 
-        if not wait_state_until(self._state_storage.read(), [StatePublisher.States.NOT_STARTED]):
+        if not wait_state_until(self._state_storage, [StatePublisher.States.NOT_STARTED]):
             print("ERROR: Timeout")
             return False
 
@@ -150,7 +151,7 @@ class Connector:
 
         print("Connector::_do_execute_generation")
 
-        if not wait_state_until(self._state_storage.read(), [StatePublisher.States.WAIT_EXECUTE_GENERATION]):
+        if not wait_state_until(self._state_storage, [StatePublisher.States.WAIT_EXECUTE_GENERATION]):
             print("ERROR: Timeout")
             return False
 
@@ -164,34 +165,38 @@ class Connector:
 
         print("Connector::_do_pop_bt")
 
-        if not wait_state_until(self._state_storage.read(),
+        if not wait_state_until(self._state_storage,
                                 [StatePublisher.States.WAIT_POP_BT, StatePublisher.States.WAIT_ANOTHER_GENERATION]):
             print("ERROR: Timeout")
             return False, ""
 
         if self._state_storage.read() != StatePublisher.States.WAIT_POP_BT:
+            print("State != WAIT_POP_BT")
+            print("done")
             return True, ""
 
-        self._ports["step_request"].output.push(InteractiveStep.STEP_POP_BEHAVIOR_TREE)
-        bt = wait_port(self._ports["bt"].input)
-        _ = wait_port(self._ports["step_reply"].input)
+        else:
+            self._ports["step_request"].output.push(InteractiveStep.STEP_POP_BEHAVIOR_TREE)
+            bt = wait_port(self._ports["bt"].input)
+            _ = wait_port(self._ports["step_reply"].input)
 
-        print("bt: %s" % bt)
-        return True, bt
+            print("bt: %s" % bt)
+            print("done")
+            return True, bt
 
     def _do_push_fitness(self, bt, fitness):
 
         print("Connector::_do_push_fitness")
 
-        if not wait_state_until(self._state_storage.read(), [StatePublisher.States.WAIT_PUSH_FITNESS]):
+        if not wait_state_until(self._state_storage, [StatePublisher.States.WAIT_PUSH_FITNESS]):
             print("ERROR: Timeout")
             return False
 
         print("bt: %s" % bt)
         print("fitness: %s" % fitness)
 
-        self._ports["step_request"].output.push(InteractiveStep.STEP_PUSH_FITNESS)
         self._ports["fitness"].output.push(fitness)
+        self._ports["step_request"].output.push(InteractiveStep.STEP_PUSH_FITNESS)
         _ = wait_port(self._ports["step_reply"].input)
 
         print("done")
@@ -201,7 +206,7 @@ class Connector:
 
         print("Connector::_do_next_generation")
 
-        if not wait_state_until(self._state_storage.read(), [StatePublisher.States.WAIT_ANOTHER_GENERATION]):
+        if not wait_state_until(self._state_storage, [StatePublisher.States.WAIT_ANOTHER_GENERATION]):
             print("ERROR: Timeout")
             return False
 
@@ -209,4 +214,5 @@ class Connector:
         another_generation = wait_port(self._ports["step_reply"].input)
 
         print("more generations: %s" % another_generation)
+        print("done")
         return True, another_generation

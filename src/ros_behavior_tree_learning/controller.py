@@ -170,6 +170,7 @@ class ControllerTask(implements(Task)):
     def _prepare_bt_settings(self):
 
         def make_nodes(text, world, verbose=False):
+            print("Node: %s" % text)
             return None
 
         conditions = []

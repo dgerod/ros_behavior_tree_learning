@@ -17,41 +17,38 @@ class GeneticProgrammingSteps(implements(AlgorithmSteps)):
         self._state_publisher = state_publisher
 
     def execution_started(self):
-        print("notify_start")
+        print("[GpSteps::execution_started]")
 
     def execute_generation(self, generation):
+        print("[GpSteps::execute_generation] BEGIN")
 
-        print("executing_generation: %d" % generation)
+        print("GpSteps::executing_generation: %d" % generation)
         self._state_publisher.send(StatePublisher.States.WAIT_EXECUTE_GENERATION)
         wait_port_until(self._step_ports.request, InteractiveStep.STEP_EXECUTE_GENERATION, self._WAIT_REFRESH_TIME)
 
         self._state_publisher.send(StatePublisher.States.RUNNING)
         self._step_ports.reply.push(True)
 
+        print("[GpSteps::execute_generation] END")
+
     def current_population(self, population):
-        print("current_population")
+        print("GpSteps::current_population")
 
     def calculate_fitness(self, individual, verbose):
 
-        print("calculate_fitness")
+        print("[GpSteps::calculate_fitness] BEGIN")
         self._send_individual(individual)
         fitness = self._wait_fitness_result()
 
-        #num_nodes = len(individual)
-
-        #COMPLEXITY_CORRECTION = 0.01
-        #bt_complexity = COMPLEXITY_CORRECTION/num_nodes
-        #new_fitness = (fitness + bt_complexity)/(1 + COMPLEXITY_CORRECTION)
-
-        #print("fitness: %s, num nones: %s, corrected fitness: %s" %(fitness, num_nodes, new_fitness))
-        #return new_fitness
-
+        print("[GpSteps::calculate_fitness] END")
         return fitness
 
     def plot_individual(self, path, plot_name, individual):
-        print("plot_individual")
+        print("[GpSteps::plot_individual]")
 
     def more_generations(self, generation, last_generation, fitness_achieved):
+
+        print("[GpSteps::more_generations] BEGIN")
 
         print("more_generations: %d/%d, %s" % (generation, last_generation, fitness_achieved))
 
@@ -63,6 +60,8 @@ class GeneticProgrammingSteps(implements(AlgorithmSteps)):
         self._state_publisher.send(StatePublisher.States.RUNNING)
         self._step_ports.reply.push(another_generation)
 
+        print("[GpSteps::more_generations] END")
+
     def execution_completed(self):
         print("execution_completed")
 
@@ -72,7 +71,6 @@ class GeneticProgrammingSteps(implements(AlgorithmSteps)):
         wait_port_until(self._step_ports.request, InteractiveStep.STEP_POP_BEHAVIOR_TREE, self._WAIT_REFRESH_TIME)
 
         text = "; ".join(individual)
-
         print("bt (list): ", individual)
         print("bt (str): ", text)
 
