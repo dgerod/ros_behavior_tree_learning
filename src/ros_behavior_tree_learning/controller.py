@@ -1,7 +1,7 @@
 import os
 import logging
-from interface import implements
 import yaml
+from interface import implements
 
 from tasks_toolkit.activities import Task
 from behavior_tree_learning.gp import GeneticParameters, GeneticSelectionMethods, TraceConfiguration
